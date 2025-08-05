@@ -71,6 +71,12 @@ for k = 1:m
     xi3(k) = y2(k) + yd(k) - 2*y3(k);
     xi4(k) = y1(k) + y3(k) - 2*y4(k);
 
+    % Desired deviations for agents
+    v1(k) = -0.2 * cos(k * pi / 30) + 0.8;
+    v2(k) = 0.4;
+    v3(k) = 0.2 * cos(k * pi / 30) - 0.8;
+    v4(k) = -0.4 ;
+
     if k == 1
         integral_xi1 = 0;
         integral_xi2 = 0;
@@ -89,7 +95,37 @@ for k = 1:m
         s1(k) = 0; s2(k) = 0; s3(k) = 0; s4(k) = 0;
     else
         s1(k) = xi1(k) + alpha * integral_xi1;
-        s1(k) = xi1(k) + alpha * integral_xi1;
+        s2(k) = xi2(k) + alpha * integral_xi2;
+        s3(k) = xi3(k) + alpha * integral_xi3;
+        s4(k) = xi4(k) + alpha * integral_xi4;
     end
 
+    % MFA updates
+    if k == 1
+        mfa1(k) = 0; mfa2(k) = 0; mfa3(k) = 0; mfa4(k) = 0;
+    else
+        mfa1(k) = mfa1(k-1) + (rho * phi1(k)) / (lambda + abs(phi1(k)^2)) * xi1(k);
+        mfa2(k) = mfa2(k-1) + (rho * phi2(k)) / (lambda + abs(phi2(k)^2)) * xi2(k);
+        mfa3(k) = mfa3(k-1) + (rho * phi3(k)) / (lambda + abs(phi3(k)^2)) * xi3(k);
+        mfa4(k) = mfa4(k-1) + (rho * phi4(k)) / (lambda + abs(phi4(k)^2)) * xi4(k);
+    end
+
+    % SMC updates
+    if k == 1
+        sm1(k) = 0; sm2(k) = 0; sm3(k) = 0; sm4(k) = 0;
+    else
+        sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
+            ( (xi1(k) + (y4(k) - y4(k-1)) + 1*(yd(k+1) - yd(k)) + ((v1(k+1)-v1(k))-(v4(k+1)-v4(k))) + 1*(v1(k+1)-v1(k))) / (1 + 1) ...
+            - (xi1(k)- s1(k)) / ((1+alpha*T) * (2)) + tau * sign(s1(k)) );
+
+        sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
+            ( (xi1(k) + (y1(k) - y1(k-1)+y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k+1)-v2(k))-(v1(k+1)-v1(k)+v3(k+1)-v3(k))) + 0*(v1(k+1)-v1(k))) / (2) ...
+                - (xi1(k)- s1(k)) / ((1+alpha*T) * (2)) + tau * sign(s1(k)) );
+
+                
+        sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
+            ( (xi1(k) + (y4(k) - y4(k-1)) + 1*(yd(k+1) - yd(k)) + ((v1(k+1)-v1(k))-(v4(k+1)-v4(k))) + 1*(v1(k+1)-v1(k))) / (1 + 1) ...
+            - (xi1(k)- s1(k)) / ((1+alpha*T) * (2)) + tau * sign(s1(k)) );
+            
+    end
 end
