@@ -43,7 +43,7 @@ yd = zeros(m+1, 1);
 %     yd(k) = 0.5 * sin(k * pi / 25) + 0.2 * cos(k * pi / 10);
 % end
 for k = 1:m+1
-    yd(k) = 0.7 * sin(k * pi / 50);
+    yd(k) = 0.6 * sin(k * pi / 50);
 end
 
 
@@ -80,10 +80,10 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
 
  
 
-    v1(k) = 2 + 0.1 * sin(k * pi / 40);   % Top agent (above leader)
-    v2(k) = 1.6 + 0.05 * sin(k * pi / 30);  % Slightly above leader
-    v3(k) = -1.6 - 0.05 * sin(k * pi / 30); % Slightly below leader
-    v4(k) = -2 - 0.1 * sin(k * pi / 40);  % Bottom agent (below leader)
+    v1(k) = 2 + 0.1 * sin(k * pi / 50);   % Top agent (above leader)
+    v2(k) = 1.6 + 0.1 * sin(k * pi / 50);  % Slightly above leader
+    v3(k) = -1.6 - 0.1 * sin(k * pi / 50); % Slightly below leader
+    v4(k) = -2 - 0.1 * sin(k * pi / 50);  % Bottom agent (below leader)
     
     
     % Error dynamics
@@ -159,10 +159,12 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
     if k == 1
         y1(k) = 0; y2(k) = 0; y3(k) = 0; y4(k) = 0;
     end
-    y1(k+1) = 0.1 * y1(k) + (n / (rT * 0.05)) * u1(k);  % Fast response (close to yd)
-    y2(k+1) = 0.1 * y2(k) + (n / (rT * 0.05)) * u2(k);  % Slightly slower than y1 (below yd)
-    y3(k+1) = 0.2 * y3(k) + (n / (rT * 0.1)) * u3(k);  % Slightly above yd
-    y4(k+1) = 0.2 * y4(k) + (n / (rT * 0.1)) * u4(k);  % Further below yd
+% Balanced system dynamics (more symmetric formation response)
+y1(k+1) = 0.15 * y1(k) + (n / (rT * 0.2)) * u1(k);  % Slightly slower than before
+y2(k+1) = 0.15 * y2(k) + (n / (rT * 0.2)) * u2(k);  % Equal inertia to y1
+y3(k+1) = 0.18 * y3(k) + (n / (rT * 0.2))  * u3(k);  % Keep above yd, but reduce overshoot
+y4(k+1) = 0.18 * y4(k) + (n / (rT * 0.1)) * u4(k);  % Reduce aggressiveness
+
     
 end
 
