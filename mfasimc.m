@@ -1,30 +1,31 @@
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 40;       % MFA adaptation speed (faster convergence)
-eta = 2;        % Phi adaptation speed (faster phi estimation)
-lamda = 300;    % MFA regularization (less restrictive)
+rho = 90;        % Increase from 60 (faster MFA convergence)
+lamda = 900;     % Reduce regularization (was 300) for more responsiveness
+eta = 28;         % Slightly faster Phi update
+
 mu = 80.5;      % Phi update regularization (unchanged)
 epsilon = 1e-5; % Stability threshold (unchanged)
 alpha = 0.5;    % Integral gain (unchanged)
-T = 0.1;        % Sampling time (unchanged)
-gamma1 = 0.07;  % Increased SMC weight
-gamma2 = 0.07;
-gamma3 = 0.1;
-gamma4 = 0.1;
-beta = 15;      % Stronger SMC gain
+T = 0.06;        % Sampling time (unchanged)
+gamma1 = 0.12;   % was 0.07
+gamma2 = 0.12;   % was 0.07
+gamma3 = 0.18;   % was 0.1
+gamma4 = 0.18;   % was 0.1
+
+beta =50;      % Stronger SMC gain
 sigma = 95;     % SMC regularization (unchanged)
-tau = 1e-4;     % Slightly increased for smoother control
+tau = 1e-6;     % Slightly increased for smoother control
 nena = 1e-5;    % Unchanged
 rT = 1024;      % Unchanged
 L = 900;        % Unchanged
-m = 100;        % Simulation steps
-n = 700;        % Input scaling
-
+m = 200;        % Changed to 200 simulation steps
+n = 1000;        % Input scaling
+timeV = 300;
 
 % Time vector for plotting
-k = 1:m;
-t = (k-1) * T;
+
 
 % Initialize arrays
 phi1 = zeros(m+1, 1); phi2 = zeros(m+1, 1); phi3 = zeros(m+1, 1); phi4 = zeros(m+1, 1);
@@ -36,19 +37,15 @@ xi1 = zeros(m, 1); xi2 = zeros(m, 1); xi3 = zeros(m, 1); xi4 = zeros(m, 1);
 v1 = zeros(m, 1); v2 = zeros(m, 1); v3 = zeros(m, 1); v4 = zeros(m, 1);
 s1 = zeros(m, 1); s2 = zeros(m, 1); s3 = zeros(m, 1); s4 = zeros(m, 1);
 omega1 = zeros(m, 1); omega2 = zeros(m, 1); omega3 = zeros(m, 1); omega4 = zeros(m, 1);
-yd = zeros(m+1, 1);
+yd = zeros(m+1,1);
 
-% Desired signal (Reference trajectory) y0(k)
-% for k = 1:m+1
-%     yd(k) = 0.5 * sin(k * pi / 25) + 0.2 * cos(k * pi / 10);
-% end
-for k = 1:m+1
-    yd(k) = 0.6 * sin(k * pi / 50);
+for k = 1:1:m+1
+    yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
 end
 
 
 % Main Loop
-for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
+for k = 1:m
     % Phi updates
     if k == 1
         phi1(k) = 0.5; phi2(k) = 0.5; phi3(k) = 0.5; phi4(k) = 0.5;
@@ -78,19 +75,29 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
         phi4(k) = phi4(1);
     end
 
- 
+    
 
-    v1(k) = 2 + 0.1 * sin(k * pi / 50);   % Top agent (above leader)
-    v2(k) = 1.6 + 0.1 * sin(k * pi / 50);  % Slightly above leader
-    v3(k) = -1.6 - 0.1 * sin(k * pi / 50); % Slightly below leader
-    v4(k) = -2 - 0.1 * sin(k * pi / 50);  % Bottom agent (below leader)
-    
-    
+    v1(k) = 7 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.5;   % Top agent (further above leader)
+    v2(k) = 5.2 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.2; % Further above leader
+    v3(k) = 3.2 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.2; % Further below leader
+    v4(k) = 1 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.5;  % Bottom agent (further below leader)
+
+    % v1(k) = 2.0;
+    % v2(k) = -2.0;
+    % v3(k) = 2.2;
+    % v4(k) = -2.2;
+
     % Error dynamics
-    xi1(k) = yd(k) - 2*y1(k) + y4(k) - v1(k);
-    xi2(k) = y1(k) - 2*y2(k) + y3(k) - v2(k);
-    xi3(k) = y2(k) + yd(k) - 2*y3(k) - v3(k);
-    xi4(k) = y1(k) + y3(k) - 2*y4(k) - v4(k);
+    xi1(k) = yd(k) - 2*y1(k) + y4(k) + 1;
+    xi2(k) = y1(k) - 2*y2(k) + y3(k) + 1;
+    xi3(k) = y2(k) + yd(k) - 2*y3(k) + 1;
+    xi4(k) = y1(k) + y3(k) - 2*y4(k) + 1;
+
+    % xi1(k) = yd(k) - 2*y1(k) + y4(k) ;
+    % xi2(k) = y1(k) - 2*y2(k) + y3(k);
+    % xi3(k) = y2(k) + yd(k) - 2*y3(k);
+    % xi4(k) = y1(k) + y3(k) - 2*y4(k);
+    
 
     if k == 1
         integral_xi1 = 0;
@@ -99,9 +106,9 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
         integral_xi4 = 0;
     else
         integral_xi1 = integral_xi1 + T * xi4(k);
-        integral_xi2 = integral_xi2 + T * xi1(k)+xi3(k);
+        integral_xi2 = integral_xi2 + T * (xi1(k) + xi3(k));
         integral_xi3 = integral_xi3 + T * xi2(k);
-        integral_xi4 = integral_xi4 + T * xi1(k)+xi3(k);
+        integral_xi4 = integral_xi4 + T * (xi1(k) + xi3(k));
     end
 
     % Sliding surfaces
@@ -129,20 +136,20 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
         sm1(k) = 0; sm2(k) = 0; sm3(k) = 0; sm4(k) = 0;
     else
         sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
-            ( (xi1(k) + (y4(k) - y4(k-1)) + (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + (v1(k)-v1(k-1))) / (1 + 1) ...
-            - (xi1(k) - s1(k)) / ((1+alpha*T) * 2) + tau * sign(s1(k)) );
+            ((xi1(k) + (y4(k) - y4(k-1)) + (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + (v1(k)-v1(k-1))) / (1 + 1) ...
+            - (xi1(k) - s1(k)) / ((1+alpha*T) * 2) + tau * sign(s1(k)));
 
         sm2(k) = sm2(k-1) + (beta * phi2(k)) / (sigma + (phi2(k))^2) * ...
-            ( (xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
-            - (xi2(k) - s2(k)) / ((1+alpha*T) * 2) + tau * sign(s2(k)) );
+            ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
+            - (xi2(k) - s2(k)) / ((1+alpha*T) * 2) + tau * sign(s2(k)));
 
         sm3(k) = sm3(k-1) + (beta * phi3(k)) / (sigma + (phi3(k))^2) * ...
-            ( (xi3(k) + (y2(k) - y2(k-1)) + (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + (v3(k)-v3(k-1))) / (1 + 1) ...
-            - (xi3(k) - s3(k)) / ((1+alpha*T) * 2) + tau * sign(s3(k)) );
+            ((xi3(k) + (y2(k) - y2(k-1)) + (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + (v3(k)-v3(k-1))) / (1 + 1) ...
+            - (xi3(k) - s3(k)) / ((1+alpha*T) * 2) + tau * sign(s3(k)));
 
         sm4(k) = sm4(k-1) + (beta * phi4(k)) / (sigma + (phi4(k))^2) * ...
-            ( (xi4(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v4(k)-v4(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
-            - (xi4(k) - s4(k)) / ((1+alpha*T) * 2) + tau * sign(s4(k)) );
+            ((xi4(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v4(k)-v4(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
+            - (xi4(k) - s4(k)) / ((1+alpha*T) * 2) + tau * sign(s4(k)));
     end
 
     % Control signals
@@ -159,43 +166,117 @@ for k = 1:m-1 % Loop to m-1 to avoid index out of bounds
     if k == 1
         y1(k) = 0; y2(k) = 0; y3(k) = 0; y4(k) = 0;
     end
-% Balanced system dynamics (more symmetric formation response)
-y1(k+1) = 0.15 * y1(k) + (n / (rT * 0.2)) * u1(k);  % Slightly slower than before
-y2(k+1) = 0.15 * y2(k) + (n / (rT * 0.2)) * u2(k);  % Equal inertia to y1
-y3(k+1) = 0.18 * y3(k) + (n / (rT * 0.2))  * u3(k);  % Keep above yd, but reduce overshoot
-y4(k+1) = 0.18 * y4(k) + (n / (rT * 0.1)) * u4(k);  % Reduce aggressiveness
-
-    
+    y1(k+1) = 0.15 * y1(k) + (n / (rT * 0.2)) * u1(k);  % Slightly slower than before
+    y2(k+1) = 0.15 * y2(k) + (n / (rT * 0.2)) * u2(k);  % Equal inertia to y1
+    y3(k+1) = 0.18 * y3(k) + (n / (rT * 0.2)) * u3(k);  % Keep above yd, but reduce overshoot
+    y4(k+1) = 0.18 * y4(k) + (n / (rT * 0.2)) * u4(k);  % Reduce aggressiveness
 end
 
-% Time vector for plotting (from 0 to m*T)
-t_plot = (0:m) * T;
+% Time vector for plotting
+t_plot = (1:m);
 
-% Plot y1, y2, y3, y4 over time
+% Compute expected outputs for formation tracking
+expected1 = yd + [v1; v1(end)];
+expected2 = yd + [v2; v2(end)];
+expected3 = yd + [v3; v3(end)];
+expected4 = yd + [v4; v4(end)];
+
+% Plot
 figure;
-plot(t_plot, y1, 'LineWidth', 1.5); hold on;
-plot(t_plot, y2, 'LineWidth', 1.5);
-plot(t_plot, y3, 'LineWidth', 1.5);
-plot(t_plot, y4, 'LineWidth', 1.5);
-plot(t_plot, yd, 'LineWidth', 1.5, 'LineStyle', '--');
-xlabel('Time (s)');
-ylabel('Output y_i');
-legend('y1', 'y2', 'y3', 'y4', 'yd');
-title('Formation Control: Outputs y1, y2, y3, y4 vs Reference yd');
-grid on;
 
-% % Plot tracking errors
-% figure;
-% plot(t(1:m), xi1, 'LineWidth', 1.5); hold on;
-% plot(t(1:m), xi2, 'LineWidth', 1.5);
-% plot(t(1:m), xi3, 'LineWidth', 1.5);
-% plot(t(1:m), xi4, 'LineWidth', 1.5);
-% plot(t(1:m), v1, 'LineWidth', 1.5, 'LineStyle', '--');
-% plot(t(1:m), v2, 'LineWidth', 1.5, 'LineStyle', '--');
-% plot(t(1:m), v3, 'LineWidth', 1.5, 'LineStyle', '--');
-% plot(t(1:m), v4, 'LineWidth', 1.5, 'LineStyle', '--');
-% xlabel('Time (s)');
-% ylabel('Tracking Errors xi_i and Desired Deviations v_i');
-% legend('xi1', 'xi2', 'xi3', 'xi4', 'v1', 'v2', 'v3', 'v4');
-% title('Tracking Errors vs Desired Deviations');
-% grid on;
+% Reference trajectory yd(k) with solid line + marker
+plot(t_plot, yd(1:m), '-', ...
+     'Color', [0 0 0], ...
+     'LineWidth', 1.5, ...
+     'MarkerIndices', 1:20:m, ...
+     'DisplayName', 'yd(k)'); hold on;
+
+% Agent outputs (dashed + distinct colors + markers)
+plot(t_plot, y1(1:m), '--', ...
+     'Color', [0 0.4470 0.7410], ...
+     'LineWidth', 2.5, ...
+     'Marker', 's', ...
+     'MarkerIndices', 5:20:m, ...
+     'DisplayName', 'y1(k)');
+
+plot(t_plot, y2(1:m), '--', ...
+     'Color', [0.8500 0.3250 0.0980], ...
+     'LineWidth', 2.5, ...
+     'Marker', '^', ...
+     'MarkerIndices', 10:20:m, ...
+     'DisplayName', 'y2(k)');
+
+plot(t_plot, y3(1:m), '--', ...
+     'Color', [0.9290 0.6940 0.1250], ...
+     'LineWidth', 2.5, ...
+     'Marker', 'v', ...
+     'MarkerIndices', 15:20:m, ...
+     'DisplayName', 'y3(k)');
+
+plot(t_plot, y4(1:m), '--', ...
+     'Color', [0.4940 0.1840 0.5560], ...
+     'LineWidth', 2.5, ...
+     'Marker', 'x', ...
+     'MarkerIndices', 20:20:m, ...
+     'DisplayName', 'y4(k)');
+
+% Expected outputs (solid lines, lighter/different hues)
+plot(t_plot, expected1(1:m), '-', ...
+     'Color', [0.3010 0.7450 0.9330], ...
+     'LineWidth', 1.5, ...
+     'DisplayName', 'v1(k)');
+
+plot(t_plot, expected2(1:m), '-', ...
+     'Color', [0.6350 0.0780 0.1840], ...
+     'LineWidth', 1.5, ...
+     'DisplayName', 'v2(k)');
+
+plot(t_plot, expected3(1:m), '-', ...
+     'Color', [0.4660 0.6740 0.1880], ...
+     'LineWidth', 1.5, ...
+     'DisplayName', 'v3(k)');
+
+plot(t_plot, expected4(1:m), '-', ...
+    'Color', [1.0 0.4 0.7], ...  % pink
+        'LineWidth', 1.5, ...
+        'DisplayName', 'v4(k)');
+
+% Plot actual outputs (thicker lines, semi-transparent)
+plot(t_plot, expected1(1:m), '-', ...
+    'Color', [0.3010 0.7450 0.9330 0.1], ... % RGBA: blue, 40% opacity
+    'LineWidth', 12, ...
+    'DisplayName', 'v1(k)');
+
+plot(t_plot, expected2(1:m), '-', ...
+    'Color', [0.6350 0.0780 0.1840 0.1], ... % dark red
+    'LineWidth', 12, ...
+    'DisplayName', 'v2(k)');
+
+plot(t_plot, expected3(1:m), '-', ...
+    'Color', [0.4660 0.6740 0.1880 0.1], ... % green
+    'LineWidth', 12, ...
+    'DisplayName', 'v3(k)');
+
+plot(t_plot, expected4(1:m), '-', ...
+    'Color', [1.0 0.4 0.7 0.1], ... % pink
+    'LineWidth', 12, ...
+    'DisplayName', 'v4(k)');
+   
+
+% Legend, Axis, Labels
+legend('Location', 'north', 'Orientation', 'horizontal', 'NumColumns', 5);
+% ylim([-6 7.5]);       
+xlabel('Time step (k)');
+ylabel('Tracking performance');
+grid on;
+% title('Agent Outputs and Expected Formation Tracking vs Reference yd');
+
+% figure; hold on; grid on;
+% plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
+% plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
+% plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
+% plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
+% legend('xi1(k)', 'xi2(k)', 'xi3(k)', 'xi4(k)');
+% xlabel('Time step (k)');
+% ylabel('Internal Variable (e.g., integral of error)');
+% title('Internal Signals: \xi_i(k)');
