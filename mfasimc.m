@@ -3,20 +3,20 @@
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 69.5;        % Increase from 60 (faster MFA convergence)
+rho = 80.5;        % Increase from 60 (faster MFA convergence)
 lamda = 900;     % Reduce regularization (was 300) for more responsiveness
 eta = 28;         % Slightly faster Phi update
 
-mu = 80.5;      % Phi update regularization (unchanged)
+mu = 90;      % Phi update regularization (unchanged)
 epsilon = 1e-5; % Stability threshold (unchanged)
 alpha = 0.5;    % Integral gain (unchanged)
 T = 0.01;        % Sampling time (unchanged)
 gamma1 = 0.32;   % was 0.07
 gamma2 = 0.12;   % was 0.07
 gamma3 = 0.18;   % was 0.1
-gamma4 = 0.18;   % was 0.1
+gamma4 = 0.2;   % was 0.1
 
-beta =35;      % Stronger SMC gain
+beta =45;      % Stronger SMC gain
 sigma = 95;     % SMC regularization (unchanged)
 tau = 1e-6;     % Slightly increased for smoother control
 nena = 1e-5;    % Unchanged
@@ -96,7 +96,7 @@ for k = 1:m
 
     % % Error dynamics
     xi1(k) = yd(k) - 2*y1(k) + y4(k) + 6.11;
-    xi2(k) = y1(k) - 2*y2(k) + y3(k) + 0.855;
+    xi2(k) = y1(k) - 2*y2(k) + y3(k) + 0.9;
     xi3(k) = y2(k) + yd(k) - 2*y3(k) - 2.855;
     xi4(k) = y1(k) + y3(k) - 2*y4(k) - 5.1;
 
@@ -171,14 +171,17 @@ for k = 1:m
 
     % System dynamics (zero disturbances assumed)
     if k == 1
-        y1(k) = 5; y2(k) = 4; y3(k) = 2; y4(k) = 1;
+        y1(k) = 3; y2(k) = 2; y3(k) = 3; y4(k) = 3;
     end
-    a =0.1;
-    nonlinearity1 = 0.01; % Coefficient for cubic nonlinearity
-    y1(k+1) = a * y1(k) + (n / (rT * 0.3)) * u1(k) - nonlinearity1 ;  % Slightly slower than before
-    y2(k+1) = a * y2(k) + (n / (rT * 0.2)) * u2(k) - nonlinearity1;  % Equal inertia to y1
-    y3(k+1) = a * y3(k) + (n / (rT * 0.2)) * u3(k) - nonlinearity1;  % Keep above yd, but reduce overshoot
-    y4(k+1) = a * y4(k) + (n / (rT * 0.2)) * u4(k) - nonlinearity1;  % Reduce aggressiveness
+    a =0.23;
+    a4 =0.33;
+    a2 =0.33;
+    nonlinearity1 = 3; % Coefficient for cubic nonlinearity
+    nonlinearity4 = 3; % Coefficient for cubic nonlinearity
+    y1(k+1) = a * y1(k) + (n / (rT * 0.3)) * u1(k) + nonlinearity1 ;  % Slightly slower than before
+    y2(k+1) = a2 * y2(k) + (n / (rT * 0.15)) * u2(k) + nonlinearity1;  % Equal inertia to y1
+    y3(k+1) = a * y3(k) + (n / (rT * 0.2)) * u3(k) + nonlinearity1;  % Keep above yd, but reduce overshoot
+    y4(k+1) = a2 * y4(k) + (n / (rT * 0.2)) * u4(k) + nonlinearity4;  % Reduce aggressiveness
 
 
         % % Plant model update with nonlinear term and feedforward
@@ -300,7 +303,7 @@ plot(t_plot, expected4(1:m), '-', ...
 
 % Legend, Axis, Labels
 legend('Location', 'north', 'Orientation', 'horizontal', 'NumColumns', 5);
-ylim([-2 7]);       
+ylim([-1 7]);       
 xlabel('Time step (k)');
 ylabel('Tracking performance');
 grid on;
