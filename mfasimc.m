@@ -1,20 +1,22 @@
+
+
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 90;        % Increase from 60 (faster MFA convergence)
+rho = 69.5;        % Increase from 60 (faster MFA convergence)
 lamda = 900;     % Reduce regularization (was 300) for more responsiveness
 eta = 28;         % Slightly faster Phi update
 
 mu = 80.5;      % Phi update regularization (unchanged)
 epsilon = 1e-5; % Stability threshold (unchanged)
 alpha = 0.5;    % Integral gain (unchanged)
-T = 0.06;        % Sampling time (unchanged)
-gamma1 = 0.12;   % was 0.07
+T = 0.01;        % Sampling time (unchanged)
+gamma1 = 0.32;   % was 0.07
 gamma2 = 0.12;   % was 0.07
 gamma3 = 0.18;   % was 0.1
 gamma4 = 0.18;   % was 0.1
 
-beta =50;      % Stronger SMC gain
+beta =35;      % Stronger SMC gain
 sigma = 95;     % SMC regularization (unchanged)
 tau = 1e-6;     % Slightly increased for smoother control
 nena = 1e-5;    % Unchanged
@@ -39,8 +41,13 @@ s1 = zeros(m, 1); s2 = zeros(m, 1); s3 = zeros(m, 1); s4 = zeros(m, 1);
 omega1 = zeros(m, 1); omega2 = zeros(m, 1); omega3 = zeros(m, 1); omega4 = zeros(m, 1);
 yd = zeros(m+1,1);
 
+% for k = 1:1:m+1
+%     yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
+% end
+
 for k = 1:1:m+1
-    yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
+    yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
+
 end
 
 
@@ -48,7 +55,7 @@ end
 for k = 1:m
     % Phi updates
     if k == 1
-        phi1(k) = 0.5; phi2(k) = 0.5; phi3(k) = 0.5; phi4(k) = 0.5;
+        phi1(k) = 0.65; phi2(k) = 0.65; phi3(k) = 0.65; phi4(k) = 0.65;
     elseif k == 2
         phi1(k) = phi1(k-1) + (eta * u1(k-1) / (mu + u1(k-1)^2)) * (y1(k) - phi1(k-1)*u1(k-1));
         phi2(k) = phi2(k-1) + (eta * u2(k-1) / (mu + u2(k-1)^2)) * (y2(k) - phi2(k-1)*u2(k-1));
@@ -77,21 +84,21 @@ for k = 1:m
 
     
 
-    v1(k) = 7 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.5;   % Top agent (further above leader)
-    v2(k) = 5.2 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.2; % Further above leader
-    v3(k) = 3.2 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.2; % Further below leader
-    v4(k) = 1 + 0.2 * sin(k * pi / 50) * exp(-0.01 * k) + 0.5;  % Bottom agent (further below leader)
+    v1(k) = 2 + 0.2 * sin(k * pi / 210) * exp(-0.01 * k) ;   % Top agent (further above leader)
+    v2(k) = 1 + 0.2 * sin(k * pi / 800) * exp(-0.01 * k) ; % Further above leader
+    v3(k) = -1 + 0.2 * sin(k * pi / 210) * exp(-0.01 * k) ; % Further below leader
+    v4(k) = -2 + 0.2 * sin(k * pi / 210) * exp(-0.01 * k) ;  % Bottom agent (further below leader)
 
     % v1(k) = 2.0;
     % v2(k) = -2.0;
     % v3(k) = 2.2;
     % v4(k) = -2.2;
 
-    % Error dynamics
-    xi1(k) = yd(k) - 2*y1(k) + y4(k) + 1;
-    xi2(k) = y1(k) - 2*y2(k) + y3(k) + 1;
-    xi3(k) = y2(k) + yd(k) - 2*y3(k) + 1;
-    xi4(k) = y1(k) + y3(k) - 2*y4(k) + 1;
+    % % Error dynamics
+    xi1(k) = yd(k) - 2*y1(k) + y4(k) + 6.11;
+    xi2(k) = y1(k) - 2*y2(k) + y3(k) + 0.855;
+    xi3(k) = y2(k) + yd(k) - 2*y3(k) - 2.855;
+    xi4(k) = y1(k) + y3(k) - 2*y4(k) - 5.1;
 
     % xi1(k) = yd(k) - 2*y1(k) + y4(k) ;
     % xi2(k) = y1(k) - 2*y2(k) + y3(k);
@@ -136,15 +143,15 @@ for k = 1:m
         sm1(k) = 0; sm2(k) = 0; sm3(k) = 0; sm4(k) = 0;
     else
         sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
-            ((xi1(k) + (y4(k) - y4(k-1)) + (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + (v1(k)-v1(k-1))) / (1 + 1) ...
+            ((xi1(k) + (y4(k) - y4(k-1)) + 1*  (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + 1* (v1(k)-v1(k-1))) / (1 + 1) ...
             - (xi1(k) - s1(k)) / ((1+alpha*T) * 2) + tau * sign(s1(k)));
 
         sm2(k) = sm2(k-1) + (beta * phi2(k)) / (sigma + (phi2(k))^2) * ...
-            ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
+            ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v2(k)-v2(k-1))) / 2 ...
             - (xi2(k) - s2(k)) / ((1+alpha*T) * 2) + tau * sign(s2(k)));
 
         sm3(k) = sm3(k-1) + (beta * phi3(k)) / (sigma + (phi3(k))^2) * ...
-            ((xi3(k) + (y2(k) - y2(k-1)) + (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + (v3(k)-v3(k-1))) / (1 + 1) ...
+            ((xi3(k) + (y2(k) - y2(k-1)) + 1* (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + 1* (v3(k)-v3(k-1))) / (1 + 1) ...
             - (xi3(k) - s3(k)) / ((1+alpha*T) * 2) + tau * sign(s3(k)));
 
         sm4(k) = sm4(k-1) + (beta * phi4(k)) / (sigma + (phi4(k))^2) * ...
@@ -164,12 +171,34 @@ for k = 1:m
 
     % System dynamics (zero disturbances assumed)
     if k == 1
-        y1(k) = 0; y2(k) = 0; y3(k) = 0; y4(k) = 0;
+        y1(k) = 5; y2(k) = 4; y3(k) = 2; y4(k) = 1;
     end
-    y1(k+1) = 0.15 * y1(k) + (n / (rT * 0.2)) * u1(k);  % Slightly slower than before
-    y2(k+1) = 0.15 * y2(k) + (n / (rT * 0.2)) * u2(k);  % Equal inertia to y1
-    y3(k+1) = 0.18 * y3(k) + (n / (rT * 0.2)) * u3(k);  % Keep above yd, but reduce overshoot
-    y4(k+1) = 0.18 * y4(k) + (n / (rT * 0.2)) * u4(k);  % Reduce aggressiveness
+    a =0.1;
+    nonlinearity1 = 0.01; % Coefficient for cubic nonlinearity
+    y1(k+1) = a * y1(k) + (n / (rT * 0.3)) * u1(k) - nonlinearity1 ;  % Slightly slower than before
+    y2(k+1) = a * y2(k) + (n / (rT * 0.2)) * u2(k) - nonlinearity1;  % Equal inertia to y1
+    y3(k+1) = a * y3(k) + (n / (rT * 0.2)) * u3(k) - nonlinearity1;  % Keep above yd, but reduce overshoot
+    y4(k+1) = a * y4(k) + (n / (rT * 0.2)) * u4(k) - nonlinearity1;  % Reduce aggressiveness
+
+
+        % % Plant model update with nonlinear term and feedforward
+        % a = 0.5;
+        % b1 = 1.2 * n / (rT * 0.2);
+        % b2 = 1.15 * n / (rT * 0.2);
+        % b3 = 1.2 * n / (rT * 0.2);
+        % b4 = 1.15 * n / (rT * 0.2);
+        
+        % nonlinearity1 = 0.02; % Coefficient for cubic nonlinearity
+        % nonlinearity2 = 0.02; % Coefficient for cubic nonlinearity
+        % nonlinearity3 = 0.02; % Coefficient for cubic nonlinearity
+        % nonlinearity4 = 0.02; % Coefficient for cubic nonlinearity
+        % ff_gain = 0.45; % Feedforward gain
+        
+        % % Add cubic nonlinearity and feedforward term
+        % y1(k+1) = a * y1(k) + b1 * u1(k) - nonlinearity1 * y1(k)^3 + ff_gain;
+        % y2(k+1) = a * y2(k) + b2 * u2(k) - nonlinearity2 * y2(k)^2 + ff_gain;
+        % y3(k+1) = a * y3(k) + b3 * u3(k) - nonlinearity3 * y3(k)^3 + ff_gain;
+        % y4(k+1) = a * y4(k) + b4 * u4(k) - nonlinearity4 * y4(k)^2 + ff_gain;
 end
 
 % Time vector for plotting
@@ -183,6 +212,7 @@ expected4 = yd + [v4; v4(end)];
 
 % Plot
 figure;
+markersize = 7;
 
 % Reference trajectory yd(k) with solid line + marker
 plot(t_plot, yd(1:m), '-', ...
@@ -191,34 +221,39 @@ plot(t_plot, yd(1:m), '-', ...
      'MarkerIndices', 1:20:m, ...
      'DisplayName', 'yd(k)'); hold on;
 
-% Agent outputs (dashed + distinct colors + markers)
+% Agent outputs (dashed + distinct colors + markers + marker size)
 plot(t_plot, y1(1:m), '--', ...
      'Color', [0 0.4470 0.7410], ...
-     'LineWidth', 2.5, ...
+     'LineWidth', 2.8, ...
      'Marker', 's', ...
-     'MarkerIndices', 5:20:m, ...
+     'MarkerSize', markersize, ...
+     'MarkerIndices', 5:9:m, ...
      'DisplayName', 'y1(k)');
 
 plot(t_plot, y2(1:m), '--', ...
      'Color', [0.8500 0.3250 0.0980], ...
-     'LineWidth', 2.5, ...
+     'LineWidth', 2.8, ...
      'Marker', '^', ...
-     'MarkerIndices', 10:20:m, ...
+     'MarkerSize', markersize, ...
+     'MarkerIndices', 10:14:m, ...
      'DisplayName', 'y2(k)');
 
 plot(t_plot, y3(1:m), '--', ...
      'Color', [0.9290 0.6940 0.1250], ...
-     'LineWidth', 2.5, ...
+     'LineWidth', 2.8, ...
      'Marker', 'v', ...
-     'MarkerIndices', 15:20:m, ...
+     'MarkerSize', markersize, ...
+     'MarkerIndices', 15:19:m, ...
      'DisplayName', 'y3(k)');
 
 plot(t_plot, y4(1:m), '--', ...
      'Color', [0.4940 0.1840 0.5560], ...
-     'LineWidth', 2.5, ...
-     'Marker', 'x', ...
-     'MarkerIndices', 20:20:m, ...
+     'LineWidth', 2.8, ...
+     'Marker', 's', ...
+     'MarkerSize', markersize, ...  % Slightly larger for 'x' marker for visibility
+     'MarkerIndices', 20:24:m, ...
      'DisplayName', 'y4(k)');
+
 
 % Expected outputs (solid lines, lighter/different hues)
 plot(t_plot, expected1(1:m), '-', ...
@@ -241,31 +276,31 @@ plot(t_plot, expected4(1:m), '-', ...
         'LineWidth', 1.5, ...
         'DisplayName', 'v4(k)');
 
-% Plot actual outputs (thicker lines, semi-transparent)
-plot(t_plot, expected1(1:m), '-', ...
-    'Color', [0.3010 0.7450 0.9330 0.1], ... % RGBA: blue, 40% opacity
-    'LineWidth', 12, ...
-    'DisplayName', 'v1(k)');
+% % Plot actual outputs (thicker lines, semi-transparent)
+% plot(t_plot, expected1(1:m), '-', ...
+%     'Color', [0.3010 0.7450 0.9330 0.1], ... % RGBA: blue, 40% opacity
+%     'LineWidth', 12, ...
+%     'DisplayName', 'v1(k)');
 
-plot(t_plot, expected2(1:m), '-', ...
-    'Color', [0.6350 0.0780 0.1840 0.1], ... % dark red
-    'LineWidth', 12, ...
-    'DisplayName', 'v2(k)');
+% plot(t_plot, expected2(1:m), '-', ...
+%     'Color', [0.6350 0.0780 0.1840 0.1], ... % dark red
+%     'LineWidth', 12, ...
+%     'DisplayName', 'v2(k)');
 
-plot(t_plot, expected3(1:m), '-', ...
-    'Color', [0.4660 0.6740 0.1880 0.1], ... % green
-    'LineWidth', 12, ...
-    'DisplayName', 'v3(k)');
+% plot(t_plot, expected3(1:m), '-', ...
+%     'Color', [0.4660 0.6740 0.1880 0.1], ... % green
+%     'LineWidth', 12, ...
+%     'DisplayName', 'v3(k)');
 
-plot(t_plot, expected4(1:m), '-', ...
-    'Color', [1.0 0.4 0.7 0.1], ... % pink
-    'LineWidth', 12, ...
-    'DisplayName', 'v4(k)');
+% plot(t_plot, expected4(1:m), '-', ...
+%     'Color', [1.0 0.4 0.7 0.1], ... % pink
+%     'LineWidth', 12, ...
+%     'DisplayName', 'v4(k)');
    
 
 % Legend, Axis, Labels
 legend('Location', 'north', 'Orientation', 'horizontal', 'NumColumns', 5);
-% ylim([-6 7.5]);       
+ylim([-2 7]);       
 xlabel('Time step (k)');
 ylabel('Tracking performance');
 grid on;
