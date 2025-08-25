@@ -3,7 +3,7 @@
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 115.5;        % Increase from 60 (faster MFA convergence)
+rho = 118.5;        % Increase from 60 (faster MFA convergence)
 lamda = 900;     % Reduce regularization (was 300) for more responsiveness
 eta = 58;         % Slightly faster Phi update
 
@@ -143,20 +143,36 @@ for k = 1:m
         sm1(k) = 0; sm2(k) = 0; sm3(k) = 0; sm4(k) = 0;
     else
         sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
-            ((xi1(k) + (y4(k) - y4(k-1)) + 1*  (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + 1* (v1(k)-v1(k-1))) / (1 + 1) ...
+            ((xi1(k) + (y4(k) - y4(k-1)) + 1*  (yd(k+1) - yd(k)) + ((v4(k)-v4(k-1))-(v1(k)-v1(k-1))) + 1* (v1(k)-v1(k-1))) / (1 + 1) ...
             - (xi1(k) - s1(k)) / ((1+alpha*T) * 2) + tau * sign(s1(k)));
 
         sm2(k) = sm2(k-1) + (beta * phi2(k)) / (sigma + (phi2(k))^2) * ...
-            ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v2(k)-v2(k-1))) / 2 ...
+            ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + (v1(k)-v1(k-1)+v3(k)-v3(k-1))-((v2(k)-v2(k-1)))  + 0*(v2(k)-v2(k-1))) / 2 ...
             - (xi2(k) - s2(k)) / ((1+alpha*T) * 2) + tau * sign(s2(k)));
 
         sm3(k) = sm3(k-1) + (beta * phi3(k)) / (sigma + (phi3(k))^2) * ...
-            ((xi3(k) + (y2(k) - y2(k-1)) + 1* (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + 1* (v3(k)-v3(k-1))) / (1 + 1) ...
+            ((xi3(k) + (y2(k) - y2(k-1)) + 1* (yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))-(v3(k)-v3(k-1))) + 1* (v3(k)-v3(k-1))) / (1 + 1) ...
             - (xi3(k) - s3(k)) / ((1+alpha*T) * 2) + tau * sign(s3(k)));
 
         sm4(k) = sm4(k-1) + (beta * phi4(k)) / (sigma + (phi4(k))^2) * ...
-            ((xi4(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v4(k)-v4(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
+            ((xi4(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v1(k)-v1(k-1)+v3(k)-v3(k-1))-(v4(k)-v4(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
             - (xi4(k) - s4(k)) / ((1+alpha*T) * 2) + tau * sign(s4(k)));
+
+            % sm1(k) = sm1(k-1) + (beta * phi1(k)) / (sigma + (phi1(k))^2) * ...
+            %     ((xi1(k) + (y4(k) - y4(k-1)) + 1*  (yd(k+1) - yd(k)) + ((v1(k)-v1(k-1))-(v4(k)-v4(k-1))) + 1* (v1(k)-v1(k-1))) / (1 + 1) ...
+            %     - (xi1(k) - s1(k)) / ((1+alpha*T) * 2) + tau * sign(s1(k)));
+    
+            % sm2(k) = sm2(k-1) + (beta * phi2(k)) / (sigma + (phi2(k))^2) * ...
+            %     ((xi2(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v2(k)-v2(k-1))) - (v1(k)-v1(k-1)+v3(k)-v3(k-1)) + 0*(v2(k)-v2(k-1))) / 2 ...
+            %     - (xi2(k) - s2(k)) / ((1+alpha*T) * 2) + tau * sign(s2(k)));
+    
+            % sm3(k) = sm3(k-1) + (beta * phi3(k)) / (sigma + (phi3(k))^2) * ...
+            %     ((xi3(k) + (y2(k) - y2(k-1)) + 1* (yd(k+1) - yd(k)) + ((v3(k)-v3(k-1))-(v2(k)-v2(k-1))) + 1* (v3(k)-v3(k-1))) / (1 + 1) ...
+            %     - (xi3(k) - s3(k)) / ((1+alpha*T) * 2) + tau * sign(s3(k)));
+    
+            % sm4(k) = sm4(k-1) + (beta * phi4(k)) / (sigma + (phi4(k))^2) * ...
+            %     ((xi4(k) + (y1(k) - y1(k-1) + y3(k) - y3(k-1)) + 0*(yd(k+1) - yd(k)) + ((v4(k)-v4(k-1))-(v1(k)-v1(k-1)+v3(k)-v3(k-1))) + 0*(v1(k)-v1(k-1))) / 2 ...
+            %     - (xi4(k) - s4(k)) / ((1+alpha*T) * 2) + tau * sign(s4(k)));
     end
 
     % Control signals
@@ -313,12 +329,12 @@ ylabel('Tracking performance');
 grid on;
 % title('Agent Outputs and Expected Formation Tracking vs Reference yd');
 
-% figure; hold on; grid on;
-% plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
-% plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
-% plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
-% plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
-% legend('xi1(k)', 'xi2(k)', 'xi3(k)', 'xi4(k)');
-% xlabel('Time step (k)');
-% ylabel('Internal Variable (e.g., integral of error)');
-% title('Internal Signals: \xi_i(k)');
+figure; hold on; grid on;
+plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
+plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
+plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
+plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
+legend('xi1(k)', 'xi2(k)', 'xi3(k)', 'xi4(k)');
+xlabel('Time step (k)');
+ylabel('Internal Variable (e.g., integral of error)');
+title('Internal Signals: \xi_i(k)');
