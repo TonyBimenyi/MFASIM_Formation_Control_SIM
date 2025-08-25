@@ -3,7 +3,7 @@
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 117.5;        % Increase from 60 (faster MFA convergence)
+rho = 115.5;        % Increase from 60 (faster MFA convergence)
 lamda = 900;     % Reduce regularization (was 300) for more responsiveness
 eta = 58;         % Slightly faster Phi update
 
@@ -46,19 +46,19 @@ yd = zeros(m+1,1);
 %     yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
 % end
 
-% for k = 1:1:m+1
-%     yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
+for k = 1:1:m+1
+    yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
 
-% end
-
-yd = 3*ones(m+1,1);
-block = 50;
-levels = [3.0 3.5 3.0 2.5 3.0 3.5];       % up-down variation
-for i = 1:numel(levels)
-    i1 = (i-1)*block + 1;
-    i2 = min(i*block, m+1);
-    yd(i1:i2) = levels(i);
 end
+
+% yd = 3*ones(m+1,1);
+% block = 50;
+% levels = [3.0 3.5 3.0 2.5 3.0 3.5];       % up-down variation
+% for i = 1:numel(levels)
+%     i1 = (i-1)*block + 1;
+%     i2 = min(i*block, m+1);
+%     yd(i1:i2) = levels(i);
+% end
 
 
 
@@ -253,7 +253,7 @@ expected4 = yd + [v4; v4(end)];
 
 
 % Plot
-figure;
+figure('Position', [100, 100, 1100, 600]);  % [x, y, width, height]
 markersize = 7;
 
 % Reference trajectory yd(k) with solid line + marker
@@ -261,7 +261,7 @@ plot(t_plot, yd(1:m), '-', ...
      'Color', [0 0 0], ...
      'LineWidth', 1.5, ...
      'MarkerIndices', 1:20:m, ...
-     'DisplayName', 'yd(k)'); hold on;
+     'DisplayName', 'y_d(k)'); hold on;
 
 % Agent outputs (dashed + distinct colors + markers + marker size)
 plot(t_plot, y1(1:m), '--', ...
@@ -270,7 +270,7 @@ plot(t_plot, y1(1:m), '--', ...
      'Marker', 's', ...
      'MarkerSize', markersize, ...
      'MarkerIndices', 5:9:m, ...
-     'DisplayName', 'y1(k)');
+     'DisplayName', 'y_1(k)');
 
 
 plot(t_plot, y2(1:m), '--', ...
@@ -279,7 +279,7 @@ plot(t_plot, y2(1:m), '--', ...
      'Marker', '^', ...
      'MarkerSize', markersize, ...
      'MarkerIndices', 10:14:m, ...
-     'DisplayName', 'y2(k)');
+     'DisplayName', 'y_2(k)');
 
 plot(t_plot, y3(1:m), '--', ...
      'Color', [0.9290 0.6940 0.1250], ...
@@ -287,7 +287,7 @@ plot(t_plot, y3(1:m), '--', ...
      'Marker', 'v', ...
      'MarkerSize', markersize, ...
      'MarkerIndices', 5:13:m, ...
-     'DisplayName', 'y3(k)');
+     'DisplayName', 'y_3(k)');
 
 plot(t_plot, y4(1:m), '--', ...
      'Color', [0.4940 0.1840 0.5560], ...
@@ -295,29 +295,29 @@ plot(t_plot, y4(1:m), '--', ...
      'Marker', 's', ...
      'MarkerSize', markersize, ...  % Slightly larger for 'x' marker for visibility
      'MarkerIndices', 5:13:m, ...
-     'DisplayName', 'y4(k)');
+     'DisplayName', 'y_4(k)');
 
 
 % Expected outputs (solid lines, lighter/different hues)
 plot(t_plot, expected1(1:m), '-', ...
      'Color', [0.3010 0.7450 0.9330], ...
      'LineWidth', 1.5, ...
-     'DisplayName', 'v1(k)');
+     'DisplayName', 'v_1(k)');
 
 plot(t_plot, expected2(1:m), '-', ...
      'Color', [0.6350 0.0780 0.1840], ...
      'LineWidth', 1.5, ...
-     'DisplayName', 'v2(k)');
+     'DisplayName', 'v_2(k)');
 
 plot(t_plot, expected3(1:m), '-', ...
      'Color', [0.4660 0.6740 0.1880], ...
      'LineWidth', 1.5, ...
-     'DisplayName', 'v3(k)');
+     'DisplayName', 'v_3(k)');
 
 plot(t_plot, expected4(1:m), '-', ...
     'Color', [1.0 0.4 0.7], ...  % pink
         'LineWidth', 1.5, ...
-        'DisplayName', 'v4(k)');
+        'DisplayName', 'v_4(k)');
 
 % % Plot actual outputs (thicker lines, semi-transparent)
 % plot(t_plot, expected1(1:m), '-', ...
@@ -342,22 +342,60 @@ plot(t_plot, expected4(1:m), '-', ...
    
 
 % Legend, Axis, Labels
-legend('Location', 'north', 'Orientation', 'horizontal', 'NumColumns', 5);
-ylim([-1 7]);       
-xlabel('Time step (k)');
-ylabel('Tracking performance');
+font_size = 20;
+font_family = 'Times New Roman';
+legend('Location', 'north', 'Orientation', 'horizontal', 'FontSize', font_size, 'FontName', font_family);
+ylim([0 7]);       
+xlabel('Time step (k)','FontSize', font_size, 'FontName', font_family);
+ylabel('Tracking performance','FontSize', font_size, 'FontName', font_family);
+
+% ✅ Change tick font size and font
+set(gca, 'FontSize', font_size, 'FontName', font_family);
 grid off;
 % title('Agent Outputs and Expected Formation Tracking vs Reference yd');
 
-% figure; hold on; grid on;
-% plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
-% plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
-% plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
-% plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
-% legend('xi1(k)', 'xi2(k)', 'xi3(k)', 'xi4(k)');
-% xlabel('Time step (k)');
-% ylabel('Internal Variable (e.g., integral of error)');
-% title('Internal Signals: \xi_i(k)');
+figure('Position', [100, 100, 1100, 600]);  % [x, y, width, height]
+
+% Agent 1
+subplot(2,2,1); % 2x2 grid, position 1
+plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
+xlabel('Time step (k)');
+ylabel('Formation error');
+title('Agent 1');
+ylim([-0.5 10]);
+set(gca, 'FontSize', font_size, 'FontName', font_family);
+grid off;
+
+% Agent 2
+subplot(2,2,2); % position 2
+plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
+xlabel('Time step (k)');
+ylabel('Formation error');
+title('Agent 2');
+set(gca, 'FontSize', font_size, 'FontName', font_family);
+grid off;
+
+% Agent 3
+subplot(2,2,3); % position 3
+plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
+xlabel('Time step (k)');
+ylabel('\Formation error');
+title('Agent 3');
+set(gca, 'FontSize', font_size, 'FontName', font_family);
+grid off;
+
+% Agent 4
+subplot(2,2,4); % position 4
+plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
+xlabel('Time step (k)');
+ylabel('Formation error');
+title('Agent 4');
+
+set(gca, 'FontSize', font_size, 'FontName', font_family);
+grid off;
+
+% sgtitle('Internal Signals of All Agents'); % global title
+
 
 %% === MSI of xi for Hybrid (MFA+SMC) vs MFA-only ===
 % Define MSI as mean of squared xi over k = 1..m
