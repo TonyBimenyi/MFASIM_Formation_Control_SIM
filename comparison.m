@@ -42,9 +42,9 @@ s1 = zeros(m, 1); s2 = zeros(m, 1); s3 = zeros(m, 1); s4 = zeros(m, 1);
 omega1 = zeros(m, 1); omega2 = zeros(m, 1); omega3 = zeros(m, 1); omega4 = zeros(m, 1);
 yd = zeros(m+1,1);
 
-% for k = 1:1:m+1
-%     yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
-% end
+for k = 1:1:m+1
+    yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
+end
 
 for k = 1:1:m+1
     yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
@@ -354,45 +354,89 @@ set(gca, 'FontSize', font_size, 'FontName', font_family);
 grid off;
 % title('Agent Outputs and Expected Formation Tracking vs Reference yd');
 
+
+
 figure('Position', [100, 100, 1100, 600]);  % [x, y, width, height]
-
-% Agent 1
-subplot(2,2,1); % 2x2 grid, position 1
+hold on; grid off;
 plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
-xlabel('Time step (k)');
-ylabel('Formation error');
-title('Agent 1');
-ylim([-0.5 10]);
-set(gca, 'FontSize', font_size, 'FontName', font_family);
-grid off;
-
-% Agent 2
-subplot(2,2,2); % position 2
 plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
-xlabel('Time step (k)');
-ylabel('Formation error');
-title('Agent 2');
-set(gca, 'FontSize', font_size, 'FontName', font_family);
-grid off;
-
-% Agent 3
-subplot(2,2,3); % position 3
 plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
-xlabel('Time step (k)');
-ylabel('\Formation error');
-title('Agent 3');
-set(gca, 'FontSize', font_size, 'FontName', font_family);
-grid off;
-
-% Agent 4
-subplot(2,2,4); % position 4
 plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
+legend('\xi_1(k)', '\xi_2(k)', '\xi_3(k)', '\xi_4(k)');
 xlabel('Time step (k)');
 ylabel('Formation error');
-title('Agent 4');
-
 set(gca, 'FontSize', font_size, 'FontName', font_family);
-grid off;
+
+
+% --- Small inset axes (e.g., zoom-in view) ---
+axes('Position',[0.30 0.55 0.35 0.3]);  % [x y width height] (normalized units)
+box on; hold on; grid off;
+
+% Replot inside small axes (maybe focus on first 50 steps)
+idx = (t_plot >= 150 & t_plot <= 200);  % Zoom region
+plot(t_plot(idx), xi1(idx), 'r--', 'LineWidth', 1.2);
+plot(t_plot(idx), xi2(idx), 'g--', 'LineWidth', 1.2);
+plot(t_plot(idx), xi3(idx), 'b--', 'LineWidth', 1.2);
+plot(t_plot(idx), xi4(idx), 'm--', 'LineWidth', 1.2);
+
+set(gca, 'FontSize', font_size-2, 'FontName', font_family);
+
+% figure('Position', [100, 100, 1100, 600]);  % [x, y, width, height]
+
+% % --- Subplot 1: xi1 ---
+% subplot(2,2,1); hold on; grid off;
+% plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
+% ylim([-3 10]);
+% xlabel('Time step (k)');
+% ylabel('Formation error');
+% set(gca, 'FontSize', font_size, 'FontName', font_family);
+
+% % Inset zoom for xi1
+% axes('Position',[0.20 0.70 0.15 0.15]);  % adjust location
+% box on; hold on; grid off;
+% idx = (t_plot >= 150 & t_plot <= 200);
+% plot(t_plot(idx), xi1(idx), 'r--', 'LineWidth', 1.2);
+% set(gca, 'FontSize', font_size-3, 'FontName', font_family);
+
+% % --- Subplot 2: xi2 ---
+% subplot(2,2,2); hold on; grid off;
+% plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
+% xlabel('Time step (k)');
+% ylabel('Formation error');
+% set(gca, 'FontSize', font_size, 'FontName', font_family);
+
+% % Inset zoom for xi2
+% axes('Position',[0.63 0.70 0.15 0.15]);
+% box on; hold on; grid off;
+% plot(t_plot(idx), xi2(idx), 'g--', 'LineWidth', 1.2);
+% set(gca, 'FontSize', font_size-3, 'FontName', font_family);
+
+% % --- Subplot 3: xi3 ---
+% subplot(2,2,3); hold on; grid off;
+% plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
+% xlabel('Time step (k)');
+% ylabel('Formation error');
+% set(gca, 'FontSize', font_size, 'FontName', font_family);
+
+% % Inset zoom for xi3
+% axes('Position',[0.20 0.23 0.15 0.15]);
+% box on; hold on; grid off;
+% plot(t_plot(idx), xi3(idx), 'b--', 'LineWidth', 1.2);
+% set(gca, 'FontSize', font_size-3, 'FontName', font_family);
+
+% % --- Subplot 4: xi4 ---
+% subplot(2,2,4); hold on; grid off;
+% plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
+% xlabel('Time step (k)');
+% ylabel('Formation error');
+% set(gca, 'FontSize', font_size, 'FontName', font_family);
+
+% % Inset zoom for xi4
+% axes('Position',[0.63 0.23 0.15 0.15]);
+% box on; hold on; grid off;
+% plot(t_plot(idx), xi4(idx), 'm--', 'LineWidth', 1.2);
+% set(gca, 'FontSize', font_size-3, 'FontName', font_family);
+
 
 % sgtitle('Internal Signals of All Agents'); % global title
 
