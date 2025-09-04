@@ -42,9 +42,9 @@ s1 = zeros(m, 1); s2 = zeros(m, 1); s3 = zeros(m, 1); s4 = zeros(m, 1);
 omega1 = zeros(m, 1); omega2 = zeros(m, 1); omega3 = zeros(m, 1); omega4 = zeros(m, 1);
 yd = zeros(m+1,1);
 
-for k = 1:1:m+1
-    yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
-end
+% for k = 1:1:m+1
+%     yd(k) = 2 * sin(k * pi / 50) * exp(-0.01 * k);
+% end
 
 for k = 1:1:m+1
     yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
