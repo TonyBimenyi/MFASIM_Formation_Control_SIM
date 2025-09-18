@@ -56,9 +56,12 @@ box on; hold on;
 plot(ch2_data, '--','Color', [0.2 0.5470 0.7410], 'LineWidth', 1.5);
 plot(ch1_data, '-m','LineWidth', 1.5);
 plot(ch4_data, '-r','LineWidth', 1.5);
+plot(ch6_data, '--b','LineWidth', 1.5);
 plot(ch5_data, '-g','LineWidth', 1.5);
-xlim([80 100]);   % zoom range 1
-ylim([60 100]);
+plot(ch7_data, '--','Color', [0.4940 0.1840 0.5560],'LineWidth', 1.5);
+
+xlim([78 100]);   % zoom range 1
+ylim([65 92]);
 set(gca, 'FontSize', 10, 'FontName', font_family);
 
 % ---------------------------
@@ -68,8 +71,9 @@ axes('Position', [0.60, 0.18, 0.25, 0.20]);  % [x, y, width, height]
 box on; hold on;
 plot(ch2_data, '--','Color', [0.2 0.5470 0.7410], 'LineWidth', 1.5);
 plot(ch1_data, '-m','LineWidth', 1.5);
+plot(ch3_data, '--k', 'LineWidth', 1.5);
 plot(ch4_data, '-r','LineWidth', 1.5);
 plot(ch5_data, '-g','LineWidth', 1.5);
-xlim([180 220]);   % zoom range 2
-ylim([80 120]);
+xlim([180 210]);   % zoom range 2
+ylim([112 130]);
 set(gca, 'FontSize', 10, 'FontName', font_family);
