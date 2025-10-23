@@ -47,9 +47,12 @@ yd = zeros(m+1,1);
 % end
 
 for k = 1:1:m+1
-    yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
-
+    amp = 0.5 + 0.7 * sin(0.09 * k);  % Varying amplitude between 0.2 and 0.8
+    yd(k) = 3 + amp * sin(0.1 * k);   % Always > 0 since min(3 - 0.8) = 2.2 > 0
 end
+
+
+
 
 % yd = 3*ones(m+1,1);
 % block = 50;
@@ -196,27 +199,28 @@ for k = 1:m
         u4(k) = mfa4(k) + gamma4 * sm4(k);
     end
 
-    % System dynamics (zero disturbances assumed)
+  % System dynamics (zero disturbances assumed)
     if k == 1
-        y1(k) = 4.8; y2(k) = 3.8; y3(k) = 1.8; y4(k) = 0.8;
+        y1(k) = 5.0; y2(k) = 4.0; y3(k) = 1.9; y4(k) = 0.9;
     end
-    a =0.5;
-    a4 =0.08;
-    a3 =0.3;
+    a2 =0.61;
+    a1 =0.63;
+    a4 =0.397;
+    a3 =0.255;
     % a2 =0.33;
     % nonlinearity1 = 3; % Coefficient for cubic nonlinearity
     nonlinearity4 = 1; % Coefficient for cubic nonlinearity
     nonlinearity1 = 2; % Coefficient for cubic nonlinearity
 
     
-    y1(k+1) = a * y1(k) + (n / (rT * 0.7)) * u1(k) + nonlinearity1  ;  % Slightly slower than before
-    y2(k+1) = a * y2(k) + (n / (rT * 0.1)) * u2(k) + nonlinearity1;  % Equal inertia to y1
+    y1(k+1) = a1 * y1(k) + (n / (rT * 0.7)) * u1(k) + nonlinearity1;  % Slightly slower than before
+    y2(k+1) = a2 * y2(k) + (n / (rT * 0.1)) * u2(k) + nonlinearity1;  % Equal inertia to y1
     y3(k+1) = a3 * y3(k) + (n / (rT * 0.2)) * u3(k) + nonlinearity1;  % Keep above yd, but reduce overshoot
     y4(k+1) = a4 * y4(k) + (n / (rT * 0.2)) * u4(k) + nonlinearity4;  % Reduce aggressiveness
 
 
     mfa_y1(k+1) = 0.5 * y1(k) + (n / (rT * 0.7)) * mfa1(k) + nonlinearity1  ;  % Slightly slower than before
-    mfa_y2(k+1) = a * y2(k) + (n / (rT * 0.1)) * mfa2(k) + nonlinearity1;  % Equal inertia to y1
+    mfa_y2(k+1) = a2 * y2(k) + (n / (rT * 0.1)) * mfa2(k) + nonlinearity1;  % Equal inertia to y1
     mfa_y3(k+1) = a3 * y3(k) + (n / (rT * 0.2)) * mfa3(k) + nonlinearity1;  % Keep above yd, but reduce overshoot
     mfa_y4(k+1) = a4 * y4(k) + (n / (rT * 0.2)) * mfa4(k) + nonlinearity4;  % Reduce aggressiveness
 
@@ -345,7 +349,7 @@ plot(t_plot, expected4(1:m), '-', ...
 font_size = 20;
 font_family = 'Times New Roman';
 legend('Location', 'north', 'Orientation', 'horizontal', 'FontSize', font_size, 'FontName', font_family);
-ylim([0 7]);       
+ylim([0 7.2]);       
 xlabel('Time step (k)','FontSize', font_size, 'FontName', font_family);
 ylabel('Tracking performance','FontSize', font_size, 'FontName', font_family);
 
@@ -357,7 +361,7 @@ grid off;
 
 
 figure('Position', [100, 100, 1100, 600]);  % [x, y, width, height]
- grid off;
+grid off;
 plot(t_plot, xi1, 'r--', 'LineWidth', 1.5);
 hold on;
 plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
@@ -372,7 +376,7 @@ set(gca, 'FontSize', font_size, 'FontName', font_family);
 % --- Small inset axes (e.g., zoom-in view) ---
 axes('Position',[0.30 0.55 0.35 0.3]);  % [x y width height] (normalized units)
 box on; hold on; grid off;
-
+ylim([-0.05 0.08]);   
 % Replot inside small axes (maybe focus on first 50 steps)
 idx = (t_plot >= 190 & t_plot <= 200);  % Zoom region
 plot(t_plot(idx), xi1(idx), 'r--', 'LineWidth', 1.2);

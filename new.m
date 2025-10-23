@@ -3,7 +3,7 @@
 clc; clear; close all;
 
 % Parameters tuned for formation control
-rho = 118.5;        % Increase from 60 (faster MFA convergence)
+rho = 115.5;        % Increase from 60 (faster MFA convergence)
 lamda = 900;     % Reduce regularization (was 300) for more responsiveness
 eta = 58;         % Slightly faster Phi update
 
@@ -189,17 +189,18 @@ for k = 1:m
     if k == 1
         y1(k) = 5.0; y2(k) = 4.0; y3(k) = 1.9; y4(k) = 0.9;
     end
-    a =0.6;
-    a4 =0.09;
-    a3 =0.25;
+    a2 =0.61;
+    a1 =0.63;
+    a4 =0.397;
+    a3 =0.255;
     % a2 =0.33;
     % nonlinearity1 = 3; % Coefficient for cubic nonlinearity
     nonlinearity4 = 1; % Coefficient for cubic nonlinearity
     nonlinearity1 = 2; % Coefficient for cubic nonlinearity
 
     
-    y1(k+1) = a * y1(k) + (n / (rT * 0.7)) * u1(k) + nonlinearity1  ;  % Slightly slower than before
-    y2(k+1) = a * y2(k) + (n / (rT * 0.1)) * u2(k) + nonlinearity1;  % Equal inertia to y1
+    y1(k+1) = a1 * y1(k) + (n / (rT * 0.7)) * u1(k) + nonlinearity1  ;  % Slightly slower than before
+    y2(k+1) = a2 * y2(k) + (n / (rT * 0.1)) * u2(k) + nonlinearity1;  % Equal inertia to y1
     y3(k+1) = a3 * y3(k) + (n / (rT * 0.2)) * u3(k) + nonlinearity1;  % Keep above yd, but reduce overshoot
     y4(k+1) = a4 * y4(k) + (n / (rT * 0.2)) * u4(k) + nonlinearity4;  % Reduce aggressiveness
 

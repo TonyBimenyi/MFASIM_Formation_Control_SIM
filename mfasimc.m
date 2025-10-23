@@ -46,9 +46,10 @@ yd = zeros(m+1,1);
 % end
 
 for k = 1:1:m+1
-    amp = 0.5 + 0.3 * sin(0.05 * k);  % Varying amplitude between 0.2 and 0.8
-    yd(k) = 3 + amp * sin(0.1 * k);   % Always > 0 since min(3 - 0.8) = 2.2 > 0
+    yd(k) = 3 + 0.5 * sin(0.1 * k);  % Always > 0
+
 end
+
 
 % Main Loop
 for k = 1:m
