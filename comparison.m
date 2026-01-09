@@ -367,18 +367,19 @@ hold on;
 plot(t_plot, xi2, 'g--', 'LineWidth', 1.5);
 plot(t_plot, xi3, 'b--', 'LineWidth', 1.5);
 plot(t_plot, xi4, 'm--', 'LineWidth', 1.5);
-legend('\xi_1(k)', '\xi_2(k)', '\xi_3(k)', '\xi_4(k)');
+legend('\xi_1(k)', '\xi_2(k)', '\xi_3(k)', '\xi_4(k)','Location', 'north', 'Orientation', 'horizontal', 'FontSize', font_size, 'FontName', font_family);
+% legend('\xi_1(k)', '\xi_2(k)', '\xi_3(k)', '\xi_4(k)');
 xlabel('Time step (k)');
 ylabel('Formation error');
 set(gca, 'FontSize', font_size, 'FontName', font_family);
 
 
 % --- Small inset axes (e.g., zoom-in view) ---
-axes('Position',[0.30 0.55 0.35 0.3]);  % [x y width height] (normalized units)
+axes('Position',[0.35 0.50 0.35 0.3]);  % [x y width height] (normalized units)
 box on; hold on; grid off;
 ylim([-0.05 0.08]);   
 % Replot inside small axes (maybe focus on first 50 steps)
-idx = (t_plot >= 190 & t_plot <= 200);  % Zoom region
+idx = (t_plot >= 160 & t_plot <= 200);  % Zoom region
 plot(t_plot(idx), xi1(idx), 'r--', 'LineWidth', 1.2);
 plot(t_plot(idx), xi2(idx), 'g--', 'LineWidth', 1.2);
 plot(t_plot(idx), xi3(idx), 'b--', 'LineWidth', 1.2);
